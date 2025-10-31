@@ -1,2 +1,6 @@
 .env
-docker-compose.yml
+# Ignore everything in config
+anki_data/*
+
+# But don't ignore these specific files
+!anki_data/.gitkeep

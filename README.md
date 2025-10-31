@@ -4,7 +4,7 @@ This project is inspired by [pnorcross/anki-desktop-docker](https://github.com/p
 
 Why? Because it makes automating Anki (with addons like AnkiConnect) easier.
 
-The Anki desktop app runs in a browser (via VNC) on port `3000`. Your Anki data is stored in a volume mounted at `/config/app` inside the container.
+The Anki desktop app runs in a browser (via VNC) on port `3000`. Your Anki data is stored in `anki_data` mounted as a volume at '/config` inside the container.
 
 ---
 
@@ -21,7 +21,7 @@ The Anki desktop app runs in a browser (via VNC) on port `3000`. Your Anki data 
 ## Files in This Repo
 
 ### `Dockerfile`
-Builds the container with Anki 25.02.7 You can change the Anki version, but compatibility may vary.
+Builds the container with Anki 25.07.5 You can change the Anki version, but compatibility may vary.
 
 ### `docker_installation`
 Contains commands to install Docker on Ubuntu.
@@ -37,38 +37,18 @@ Also uses `curl` to call AnkiConnect. It forces a sync and optionally reschedule
 
 ---
 
-## Docker Compose Setup
+## How to run
 
-Create a `docker-compose.yml` in the root of the repo:
-
-```yaml
-services: 
-  anki-desktop: 
-    build: 
-      context: ./
-      dockerfile: Dockerfile
-    environment:
-      - PUID=1000
-      - PGID=1000
-    volumes:
-      - ~/.local/share/Anki2:/config/app/Anki2
-      - ~/backups:/config/app/backups
-    ports: 
-      - 3000:3000
-      # Anki Connect port
-      - 8765:8765
-
-````
-
-* The **first volume** maps your local Anki data (on Ubuntu it's usually at `~/.local/share/Anki2`) into the container.
-* The **second volume** is for backups you extract via AnkiConnect.
-
-To get started:
-
+If you want you can run this using the image `mlcivilengineer/anki-desktop-docker` which is automatically built using Github Actions in this repo. Use the following command:
 ```bash
-git clone <this-repo>
-cd anki-desktop-docker
-docker compose up --build -d
+docker run -d \
+    --name anki-desktop \
+    -e PUID=1000 \
+    -e PGID=1000 \
+    -v "$(pwd)/anki_data:/config" \
+    -p 3000:3000 \
+    -p 8765:8765 \
+    mlcivilengineer/anki-desktop-docker:main
 ```
 
 Then open your browser and head to:
@@ -77,12 +57,59 @@ Then open your browser and head to:
 http://localhost:3000
 ```
 
+Press Enter after Anki is installed for the first time. Now you can use it as normal. In order to sync with the other clients, put your sync information in the Sync tab.
+
+
+## Docker Compose Setup
+
+If you prefer docker compose instead, use the `docker-compose.yml` in the root of the repo:
+```yaml
+services:
+  anki-desktop:
+    image: mlcivilengineer/anki-desktop-docker:main
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./anki_data:/config
+    ports:
+      - 3000:3000  # Web UI
+      - 8765:8765  # AnkiConnect
+
+````
+
+
+To get started:
+
+```bash
+git clone <this-repo>
+cd anki-desktop-docker
+docker compose up -d
+```
+
 ---
+
+## Optional: CJK Font Support
+
+If you need support for Chinese, Japanese, or Korean (CJK) characters in your Anki cards, you can enable this by uncommenting the following environment variables in the `docker-compose.yml` file:
+
+```yaml
+environment:
+  - PUID=1000
+  - PGID=1000
+  # Uncomment the following lines to enable CJK font support
+  - DOCKER_MODS=linuxserver/mods:universal-package-install
+  - INSTALL_PACKAGES=language-pack-zh-hans|fonts-arphic-ukai|fonts-arphic-uming|fonts-ipafont-mincho|fonts-ipafont-gothic|fonts-unfonts-core
+```
+
+After making these changes, rebuild your container for the changes to take effect.
 
 ## AnkiConnect Configuration
 
-Make sure your AnkiConnect config (inside Anki) looks like this:
-
+If you want to expose the Anki client to http requests, make sure to install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) Add-on and to configure the Add-on with:
 ```json
 {
     "apiKey": null,

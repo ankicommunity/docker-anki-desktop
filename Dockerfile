@@ -12,6 +12,8 @@ RUN apt-get update && \
         libxcb-xinerama0 \
         libxcb-cursor0 \
         python3-xdg \
+        lame \
+        mplayer \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,10 +24,8 @@ RUN dpkg --remove anki && \
   cd anki-launcher-${ANKI_VERSION}-linux && ./install.sh &&  cd .. && \
   rm -rf anki-launcher-${ANKI_VERSION}-linux anki-launcher-${ANKI_VERSION}-linux.tar.zst
 
-# Create a config directory to be mounted and add symbolic links to Anki's real config directories
-RUN mkdir -p /config/.local/share && \
-  ln -s /config/app/Anki  /config/.local/share/Anki  && \
-  ln -s /config/app/Anki2 /config/.local/share/Anki2
+# Create a config directory to be mounted
+RUN mkdir -p /config/.local/share
 
 COPY ./root /
 
